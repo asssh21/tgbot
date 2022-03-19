@@ -1,5 +1,6 @@
 import telebot
 import sqlite3
+from telebot import types
 
 bot = telebot.TeleBot('5169779515:AAE1STcClE8c_2tiCRUqoHCO2qFw8CKZhSk')
 
@@ -9,19 +10,55 @@ cursor = conn.cursor()
 @bot.message_handler(commands=["start"])
 def start_message(message):
     people_id = message.chat.id
-    cursor.execute (f"SELECT user_id FROM users WHERE user_id ={people_id}")
+    cursor.execute(f"SELECT user_id FROM users WHERE user_id ={people_id}")
     data = cursor.fetchone()
     if data is None:
         user_id = [message.chat.id, message.from_user.last_name, message.from_user.first_name]
-        cursor.execute("INSERT INTO users VALUES (?, ?, ?);", user_id)
+        cursor.execute("INSERT INTO users VALUES (?, ?, ?, 0);", user_id)
         conn.commit()
-        bot.send_message(message.chat.id, 'yo')
+        bot.send_message(message.chat.id, 'Спасибо за регистрацию')
     else:
-        bot.send_message(message.chat.id, 'nope')
+        bot.send_message(message.chat.id, 'Ваш аккаунт уже зарегистрирован')
 
-        bot.send_message(message.from_user.last_name, 'write surname')
-        
-        bot.send_message(message.from_user.last_name, 'there are')
+@bot.message_handler(commands=["admin"])
+def adminname1(message):
+    people_id = message.chat.id
+    cursor.execute(f"SELECT admin FROM users WHERE user_id ={people_id}")
+    data = cursor.fetchone()
+    if data[0] == 1:
+        startKBoard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+        premium = types.KeyboardButton(text="Выдать премиум")
+        startKBoard.add(premium)
+        bot.send_message(message.chat.id, 'Добро пожаловать в админ панель', reply_markup=startKBoard)
+    else:
+        bot.send_message(message.chat.id, 'Вы не админ')
+
+@bot.message_handler(func=lambda m:m.text == 'Выдать админа')
+def premium(message):
+    reply_markup = types.ReplyKeyboardRemove()
+    people_id = message.chat.id
+    cursor.execute(f"SELECT user_id FROM users WHERE user_id ={people_id}")
+    data = cursor.fetchone()
+    if data[0] == 1:
+        sent = bot.reply_to(message, 'Введите id', reply_markup=types.ReplyKeyboardRemmove())
+        bot.register_next_step_handler(sent, get)
+    else:
+        bot.send_message(message.chat.id, 'Недостаточно прав', reply_markup=types.ReplyKeyboardRemmove())
+
+def get(message):
+    user = message.text
+    msg = bot.send_message(message.chat.id, 'Поиск🔬')
+    cursor.execute(f"SELECT user name FROM users WHERE user_id ={user}")
+    data2 = cursor.fetchone()
+    if data2 is None:
+        time.sleep(1)
+        bot.edit_message_text(chat_id=message.chat.id, message_id=msg.message_id,text='Такого пользователя не существует')
+    else:
+        cursor.execute(f"SELECT USERS name SET premium = I WHERE user_id ={user}")
+        conn.commit()
+        time.sleep(1)
+        bot.edit_message_text(chat_id=message.chat.id, message_id=msg.message_id, text='У пользователя есть премиум')
+
+
 
 bot.polling(none_stop=True)
-
