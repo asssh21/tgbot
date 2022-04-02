@@ -1,0 +1,20 @@
+bot = ('5169779515:AAE1STcClE8c_2tiCRUqoHCO2qFw8CKZhSk')
+dp = Dispatcher(bot, storage=MemoryStorage())
+
+class Order(StatesGroup):
+    product = State()
+    payment = State()
+
+@dp.message_handler(lambda message: message.text == "fjewew")
+async def start(message : types.Message):
+    await message.answer('dsadas', reply_markup=keyboards.keyboards_shop)
+
+
+@dp.message_handler(state=order.product)
+async def food_chosen(message:types.message, state: FSMContext):
+    await state.update_data(food_chosen=message.text.lower())
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    go = types.KeyboardButton(Text="вшыф")
+    keyboard.add(go)
+    await message.answer('cafsfsafafasf', reply_markup=keyboard)
+    await Order.next()
